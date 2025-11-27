@@ -2,7 +2,6 @@ import pygame
 from src.game import Game
 
 def main():
-    """Initialize and run the simulation."""
     try:
         game = Game()
         game.run()
