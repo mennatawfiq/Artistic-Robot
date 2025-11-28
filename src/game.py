@@ -2,6 +2,7 @@ import pygame
 from src.settings import *
 from src.robot.robot import Robot
 from src.menu import Menu
+from src.utils.img_utils import image_to_rgb_array
 
 class Game:
     def __init__(self):
@@ -32,6 +33,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.DROPFILE and self.state == "upload":
+                    img_path = event.file
+                    print("Dropped file:", img_path)
+                    last_img_arr = image_to_rgb_array(img_path, IMAGE_RESOLUTION) # <<<<<< draw this image pixel by pixel 
+                    print("Array shape:", last_img_arr.shape)
                 
                 if self.state == "menu":
                     action = self.menu.handle_event(event)
@@ -71,6 +77,7 @@ class Game:
         self.draw_back_button()
         self.robot.draw(self.screen)
     
+
     def run_text_mode(self):
         self.screen.fill(WHITE)
         self.draw_back_button()
