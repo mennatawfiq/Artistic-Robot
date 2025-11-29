@@ -69,14 +69,13 @@ class Game:
                     if self.back_button.collidepoint(event.pos):
                         self.cur_state = "menu"
                         self.last_img_arr = None # **remove this to conserve last drawing
-                        self.state = "menu"
                     # Optional: reset text mode 
                     self.user_text = "" 
                     self.text_entered = False
                     self.text_path = []
                     self.text_index = 0
                 # Text mode typing
-                if self.state == "text" and not self.text_entered:
+                if self.cur_state == "text" and not self.text_entered:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_RETURN:
                             self.text_entered = True
@@ -161,5 +160,5 @@ class Game:
                     self.text_index += 1
 
             # Draw robot
-            self.robot.draw(self.screen)
+            self.robot.draw_robot(self.screen)
 
