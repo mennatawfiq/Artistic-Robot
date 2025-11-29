@@ -7,7 +7,8 @@ class Menu:
         self.font = pygame.font.SysFont('Serif', 32)
         self.title_font = pygame.font.SysFont('Serif', 44, bold=True)
         self.buttons = [
-            {"text": "Upload Image", "rect": pygame.Rect(0, 0, 300, 60), "action": "upload"},
+            {"text": "Raster Draw", "rect": pygame.Rect(0, 0, 300, 60), "action": "raster"},
+            {"text": "Vector Draw", "rect": pygame.Rect(0, 0, 300, 60), "action": "vector"},
             {"text": "Enter Text", "rect": pygame.Rect(0, 0, 300, 60), "action": "text"}
         ]
         self.setup_buttons()
