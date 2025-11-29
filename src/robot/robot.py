@@ -5,15 +5,13 @@ from src.settings import *
 class Robot:
   
   def __init__(self):
-    self.x = 50
-    self.y = 50
     self.current_row = 0
     self.current_col = 0
     self.drawing = False
     self.pixel_size = PIXEL_SIZE  
     self.grid_spacing = 2 * PIXEL_SIZE 
     self.angle = 0  
-    self.drawing_step = 20  
+    self.drawing_step = 40 
     self.completed_pixels = []  
     self.x = WIDTH // 2
     self.y = HEIGHT // 2
@@ -36,7 +34,7 @@ class Robot:
       actual_col = img_arr.shape[1] - 1 - col
     
     start_x = WIDTH // 2 - self.pixel_size * (IMAGE_RESOLUTION - 2)
-    start_y = HEIGHT // 2 - self.pixel_size * (IMAGE_RESOLUTION - 2)
+    start_y = HEIGHT // 2 - self.pixel_size * (IMAGE_RESOLUTION - 1)
     center_x = start_x + actual_col * self.grid_spacing
     center_y = start_y + row * self.grid_spacing
     return center_x, center_y
@@ -46,6 +44,9 @@ class Robot:
 
   def draw_raster(self, screen, img_arr):
     if img_arr is None:
+      self.current_row = 0
+      self.current_col = 0
+      self.completed_pixels = []
       font = pygame.font.SysFont('Serif', 24)
       text = font.render("Drag and drop an image here", True, BLACK)
       text_rect = text.get_rect(center=(WIDTH//2, HEIGHT//2))
