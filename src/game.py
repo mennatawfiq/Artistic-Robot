@@ -16,7 +16,7 @@ class Game:
         
         # Game states
         self.cur_state = "menu"
-        self.menu = Menu(self.screen)
+        self.menu = Menu(self.screen, MENU_BUTTONS)
         self.text_menu = TextMenu(self.screen)
         
         self.robot = Robot()
@@ -126,7 +126,7 @@ class Game:
             
             # Draw based on current state
             if self.cur_state == "menu":
-                self.menu.draw()
+                self.menu.draw("Autonomous Robotic Art", "Select Drawing Mode")
             elif self.cur_state == "text_menu":
                 self.text_menu.draw()
                 self.draw_back_button()
@@ -234,59 +234,8 @@ class Game:
                 # If robot arrived at point, go to next point
                 if abs(self.robot.x - target_x) < 2 and abs(self.robot.y - target_y) < 2:
                     self.text_index += 1
-            
-            else:
-                # Define the Parking Spot (Bottom Right, off the paper)
-                parking_x = WIDTH - 50
-                parking_y = HEIGHT - 50
-                
-                # Calculate smooth movement
-                dx = parking_x - self.robot.x
-                dy = parking_y - self.robot.y
-                distance = (dx**2 + dy**2)**0.5
-                
-                # Move the robot incrementally
-                if distance > ROBOT_SPEED:
-                    move_x = (dx / distance) * ROBOT_SPEED
-                    move_y = (dy / distance) * ROBOT_SPEED
-                    
-                    # Update robot position manually
-                    self.robot.x += move_x
-                    self.robot.y += move_y
-                    
-                    # Update the rect for drawing
-                    if hasattr(self.robot, 'rect'):
-                        self.robot.rect.x = int(self.robot.x)
-                        self.robot.rect.y = int(self.robot.y)
-                else:
-                    # Snap to exact spot if very close
-                    self.robot.move_to(parking_x, parking_y)
-            
+
             self.robot.draw_robot(self.screen)
-            # # Draw lines
-            # for i in range(1, self.text_index):
-            #     x1, y1, pen1 = self.text_path[i-1]
-            #     x2, y2, pen2 = self.text_path[i]
-            #     if pen2:
-            #         pygame.draw.line(self.screen, BLACK, (x1, y1), (x2, y2), DRAWING_WIDTH)
-
-            # # Move robot to next point
-            # if self.text_index < len(self.text_path):
-            #     target_x, target_y, pen = self.text_path[self.text_index]
-            #     self.robot.move_to(target_x, target_y)
-
-            #     # Draw line if pen is down
-            #     if pen and self.text_index > 0:
-            #         prev_x, prev_y, _ = self.text_path[self.text_index-1]
-            #         pygame.draw.line(self.screen, BLACK, (prev_x, prev_y), (self.robot.x, self.robot.y), DRAWING_WIDTH)
-
-            #     # Check if robot reached target
-            #     if (round(self.robot.x), round(self.robot.y)) == (round(target_x), round(target_y)):
-            #         self.text_index += 1
-
-            # # Draw robot
-            # self.robot.draw_robot(self.screen)
-            
             
     def reset_robot_to_start(self):
             start_x = PAPER_RECT.left + 20

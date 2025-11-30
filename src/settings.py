@@ -3,6 +3,9 @@ import pygame
 
 WIDTH, HEIGHT = 1000, 650
 
+BUTTON_WIDTH = 300
+BUTTON_HEIGHT = 60
+
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
@@ -19,8 +22,6 @@ DRAWING_WIDTH = 3
 IMAGE_RESOLUTION = 32
 PIXEL_SIZE = 10
 
-
-
 # Notebook/Border Settings
 PAPER_COLOR = (240, 240, 240) # Off-white for the paper
 BORDER_COLOR = (0, 0, 0)      # Black outline
@@ -33,3 +34,9 @@ PAPER_RECT = pygame.Rect(
 )
 
 LINE_SPACING = 90  # How far down to jump for a new line
+
+MENU_BUTTONS = [
+            {"text": "Raster Draw", "action": "raster"},
+            {"text": "Vector Draw", "action": "vector"},
+            {"text": "Enter Text", "action": "text_menu"}
+        ]
