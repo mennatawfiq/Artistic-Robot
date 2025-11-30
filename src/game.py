@@ -5,6 +5,7 @@ from src.menu import Menu, TextMenu
 from src.utils.img_utils import image_to_rgb_array
 from src.text.text_engine import TextEngine
 from src.cooperative.cooperative_robot import CooperativeRobot
+from src.environment.env import Border
 
 class Game:
     def __init__(self):
@@ -19,16 +20,25 @@ class Game:
         self.text_menu = TextMenu(self.screen)
         
         self.robot = Robot()
-        self.back_button = pygame.Rect(5, 5, 30, 30)  
+        
+        # Back button
+        self.back_button = pygame.Rect(5, 5, 30, 30)
+        
+        # Create border of the paper
+        self.border = Border()
+        
+        # Main game loop
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.text_engine = TextEngine(spacing=20, scale=2)
+        # Text mode variables
+        self.text_engine = TextEngine(spacing=10, scale=1.5)
         self.text_path = []
         self.text_index = 0
         self.user_text = ""
         self.text_entered = False
         self.input_active = True
+        self.is_robot_initialized = False
         
         # Cooperative mode
         self.cooperative_robot = CooperativeRobot(self.screen, self.text_engine)
@@ -57,6 +67,13 @@ class Game:
                     if action:
                         print(f"*** ACTION FROM MENU: '{action}' ***")
                         self.cur_state = action
+                        self.is_robot_initialized = False # Reset robot when changing modes
+                        # Reset text variables
+                        self.user_text = ""
+                        self.text_entered = False
+                        self.text_path = []
+                        self.text_index = 0
+                        print(f"Selected mode: {action}")
                 
                 # Handle text menu events
                 elif self.cur_state == "text_menu":
@@ -89,7 +106,12 @@ class Game:
                         if event.key == pygame.K_RETURN:
                             self.text_entered = True
                             self.input_active = False
-                            self.text_path = self.text_engine.build_path(self.user_text, 50, 300)
+                            
+                            self.text_path = self.text_engine.build_path(
+                                self.user_text, 
+                                PAPER_RECT,
+                                LINE_SPACING
+                            )
                             self.text_index = 0
                             if self.text_path:
                                 self.robot.x, self.robot.y, _ = self.text_path[0]
@@ -119,6 +141,32 @@ class Game:
             
             pygame.display.flip()
             self.clock.tick(60)
+            
+    def wrap_text(self, text, font, max_width):
+        """Splits a string into a list of lines that fit within max_width."""
+        words = text.split(' ')
+        lines = []
+        current_line = []
+        
+        for word in words:
+            # Test if adding the next word exceeds width
+            test_line = ' '.join(current_line + [word])
+            if font.size(test_line)[0] < max_width:
+                current_line.append(word)
+            else:
+                # If current line is not empty, save it and start new line
+                if current_line:
+                    lines.append(' '.join(current_line))
+                    current_line = [word]
+                else:
+                    # Case for a single super long word
+                    lines.append(word)
+                    current_line = []
+                    
+        # Add the last remaining line
+        if current_line:
+            lines.append(' '.join(current_line))
+        return lines
 
     def _reset_text_mode(self):
         """Reset all text mode variables"""
@@ -150,6 +198,8 @@ class Game:
     def run_single_robot_mode(self):
         """Single robot mode"""
         self.screen.fill(WHITE)
+        # Draw the border of the paper
+        self.border.draw(self.screen)
         self.draw_back_button()
         
         font = pygame.font.SysFont('Arial', 24)
@@ -174,6 +224,8 @@ class Game:
             # Move robot
             if self.text_index < len(self.text_path):
                 target_x, target_y, pen = self.text_path[self.text_index]
+                
+                # Move robot towards target
                 self.robot.move_to(target_x, target_y)
 
                 if pen and self.text_index > 0:
@@ -184,3 +236,14 @@ class Game:
                     self.text_index += 1
 
             self.robot.draw_robot(self.screen)
+            
+    def reset_robot_to_start(self):
+            start_x = PAPER_RECT.left + 20
+            start_y = PAPER_RECT.top + 20
+            
+            if hasattr(self.robot, 'rect'):
+                self.robot.rect.x = start_x
+                self.robot.rect.y = start_y
+            else:
+                self.robot.x = start_x
+                self.robot.y = start_y
