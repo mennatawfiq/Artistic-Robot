@@ -224,8 +224,8 @@ class CooperativeRobot:
         robot2_start_x = 50 + section_width  
         
         
-        self.robot1_path = self.text_engine.build_path(robot1_text, robot1_start_x, 300)
-        self.robot2_path = self.text_engine.build_path(robot2_text, robot2_start_x, 300)
+        self.robot1_path = self.text_engine.build_path_coop(robot1_text, robot1_start_x, 300)
+        self.robot2_path = self.text_engine.build_path_coop(robot2_text, robot2_start_x, 300)
         
         # Reset indices
         self.robot1_index = 0
