@@ -2,34 +2,37 @@ import pygame
 from src.settings import *
 
 class Menu:
-    def __init__(self, screen):
+    def __init__(self, screen, Buttons):
         self.screen = screen
         self.font = pygame.font.SysFont('Serif', 32)
         self.title_font = pygame.font.SysFont('Serif', 44, bold=True)
         self.buttons = [
-            {"text": "Raster Draw", "rect": pygame.Rect(0, 0, 300, 60), "action": "raster"},
-            {"text": "Vector Draw", "rect": pygame.Rect(0, 0, 300, 60), "action": "vector"},
-            {"text": "Enter Text", "rect": pygame.Rect(0, 0, 300, 60), "action": "text_menu"}  # اتغير لـ text_menu
-        ]
+        {
+            "text": button["text"],
+            "rect": pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "action": button["action"]
+        }
+        for button in Buttons
+    ]
         self.setup_buttons()
 
     def setup_buttons(self):
-        total_height = len(self.buttons) * 60  
+        total_height = len(self.buttons) * BUTTON_HEIGHT  
         start_y = (HEIGHT - total_height) // 2
         
         for i, button in enumerate(self.buttons):
             button["rect"].centerx = WIDTH // 2
             button["rect"].y = start_y + i * 70
     
-    def draw(self):
+    def draw(self, Title, Subtitle):
         self.screen.fill(WHITE)
         
         # Draw title
-        title = self.title_font.render("Autonomous Robotic Art", True, BLACK)
+        title = self.title_font.render(Title, True, BLACK)
         title_rect = title.get_rect(center=(WIDTH//2, 100))
         self.screen.blit(title, title_rect)
         
-        subtitle = self.font.render("Select Drawing Mode", True, BLACK)
+        subtitle = self.font.render(Subtitle, True, BLACK) 
         subtitle_rect = subtitle.get_rect(center=(WIDTH//2, 160))
         self.screen.blit(subtitle, subtitle_rect)
         
@@ -48,7 +51,7 @@ class Menu:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for button in self.buttons:
                 if button["rect"].collidepoint(event.pos):
-                    print(f"Menu: Button '{button['text']}' clicked, action: {button['action']}")
+                    print(f"Button '{button['text']}' clicked, action: {button['action']}")
                     return button["action"]
         return None
 
