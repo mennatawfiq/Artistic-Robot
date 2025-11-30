@@ -67,7 +67,7 @@ class Game:
                         self._reset_text_mode()
                 
                 # Handle back button
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.back_button.collidepoint(event.pos):
                         print("*** BACK BUTTON CLICKED ***")
                         if self.cur_state in ["text_single", "text_cooperative"]:
