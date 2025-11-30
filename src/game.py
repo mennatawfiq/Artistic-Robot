@@ -5,6 +5,7 @@ from src.menu import Menu, TextMenu
 from src.utils.img_utils import image_to_rgb_array
 from src.text.text_engine import TextEngine
 from src.cooperative.cooperative_robot import CooperativeRobot
+from src.environment.env import Border
 
 class Game:
     def __init__(self):
@@ -19,16 +20,25 @@ class Game:
         self.text_menu = TextMenu(self.screen)
         
         self.robot = Robot()
-        self.back_button = pygame.Rect(5, 5, 30, 30)  
+        
+        # Back button
+        self.back_button = pygame.Rect(5, 5, 30, 30)
+        
+        # Create border of the paper
+        self.border = Border()
+        
+        # Main game loop
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.text_engine = TextEngine(spacing=20, scale=2)
+        # Text mode variables
+        self.text_engine = TextEngine(spacing=10, scale=1.5)
         self.text_path = []
         self.text_index = 0
         self.user_text = ""
         self.text_entered = False
         self.input_active = True
+        self.is_robot_initialized = False
         
         # Cooperative mode
         self.cooperative_robot = CooperativeRobot(self.screen, self.text_engine)
@@ -57,6 +67,13 @@ class Game:
                     if action:
                         print(f"*** ACTION FROM MENU: '{action}' ***")
                         self.cur_state = action
+                        self.is_robot_initialized = False # Reset robot when changing modes
+                        # Reset text variables
+                        self.user_text = ""
+                        self.text_entered = False
+                        self.text_path = []
+                        self.text_index = 0
+                        print(f"Selected mode: {action}")
                 
                 # Handle text menu events
                 elif self.cur_state == "text_menu":
@@ -89,7 +106,12 @@ class Game:
                         if event.key == pygame.K_RETURN:
                             self.text_entered = True
                             self.input_active = False
-                            self.text_path = self.text_engine.build_path(self.user_text, 50, 300)
+                            
+                            self.text_path = self.text_engine.build_path(
+                                self.user_text, 
+                                PAPER_RECT,
+                                LINE_SPACING
+                            )
                             self.text_index = 0
                             if self.text_path:
                                 self.robot.x, self.robot.y, _ = self.text_path[0]
@@ -119,6 +141,32 @@ class Game:
             
             pygame.display.flip()
             self.clock.tick(60)
+            
+    def wrap_text(self, text, font, max_width):
+        """Splits a string into a list of lines that fit within max_width."""
+        words = text.split(' ')
+        lines = []
+        current_line = []
+        
+        for word in words:
+            # Test if adding the next word exceeds width
+            test_line = ' '.join(current_line + [word])
+            if font.size(test_line)[0] < max_width:
+                current_line.append(word)
+            else:
+                # If current line is not empty, save it and start new line
+                if current_line:
+                    lines.append(' '.join(current_line))
+                    current_line = [word]
+                else:
+                    # Case for a single super long word
+                    lines.append(word)
+                    current_line = []
+                    
+        # Add the last remaining line
+        if current_line:
+            lines.append(' '.join(current_line))
+        return lines
 
     def _reset_text_mode(self):
         """Reset all text mode variables"""
@@ -150,37 +198,105 @@ class Game:
     def run_single_robot_mode(self):
         """Single robot mode"""
         self.screen.fill(WHITE)
+        # Draw the border of the paper
+        self.border.draw(self.screen)
         self.draw_back_button()
-        
-        font = pygame.font.SysFont('Arial', 24)
-        mode_surface = font.render("Mode: Single Robot", True, BLACK)
-        self.screen.blit(mode_surface, (WIDTH - 200, 20))
-        
-        font = pygame.font.SysFont('Arial', 32) 
-        if not self.text_entered:
-            prompt_surface = font.render("Enter text and press Enter:", True, BLACK)
-            self.screen.blit(prompt_surface, (50, 20))
-            input_surface = font.render(self.user_text, True, BLACK)
-            self.screen.blit(input_surface, (50, 60))
-        else:
-            # Draw completed lines
-            for i in range(1, self.text_index):
-                if i < len(self.text_path):
-                    x1, y1, pen1 = self.text_path[i-1]
-                    x2, y2, pen2 = self.text_path[i]
-                    if pen2:
-                        pygame.draw.line(self.screen, BLACK, (x1, y1), (x2, y2), DRAWING_WIDTH)
 
-            # Move robot
+        # Reset Robot Position
+        if not self.is_robot_initialized:
+            self.reset_robot_to_start()
+            self.is_robot_initialized = True
+            
+        if not self.text_entered:
+            # Show typing prompt
+            font = pygame.font.SysFont('Arial', 32)
+            full_line = "Enter text and press Enter: " + self.user_text + "|"
+            prompt_surface = font.render(full_line, True, BLACK)
+            self.screen.blit(prompt_surface,(PAPER_RECT.left, PAPER_RECT.top - 40))
+            #input_surface = font.render(self.user_text+ "|", True, BLUE)
+            #self.screen.blit(input_surface,(PAPER_RECT.left + 20, PAPER_RECT.top + 20))
+            self.robot.draw_robot(self.screen)
+        else:
+            if len(self.text_path) > 1:
+                for i in range(1, self.text_index):
+                    p1 = self.text_path[i-1]
+                    p2 = self.text_path[i]
+                    if p2[2] == 1: # If pen is DOWN
+                        pygame.draw.line(self.screen, BLACK, (p1[0], p1[1]), (p2[0], p2[1]), 2)
+
+            # Move Robot
             if self.text_index < len(self.text_path):
                 target_x, target_y, pen = self.text_path[self.text_index]
+                
+                # Move robot towards target
                 self.robot.move_to(target_x, target_y)
-
-                if pen and self.text_index > 0:
-                    prev_x, prev_y, _ = self.text_path[self.text_index-1]
-                    pygame.draw.line(self.screen, BLACK, (prev_x, prev_y), (self.robot.x, self.robot.y), DRAWING_WIDTH)
-
-                if (round(self.robot.x), round(self.robot.y)) == (round(target_x), round(target_y)):
+                
+                # If robot arrived at point, go to next point
+                if abs(self.robot.x - target_x) < 2 and abs(self.robot.y - target_y) < 2:
                     self.text_index += 1
-
+            
+            else:
+                # Define the Parking Spot (Bottom Right, off the paper)
+                parking_x = WIDTH - 50
+                parking_y = HEIGHT - 50
+                
+                # Calculate smooth movement
+                dx = parking_x - self.robot.x
+                dy = parking_y - self.robot.y
+                distance = (dx**2 + dy**2)**0.5
+                
+                # Move the robot incrementally
+                if distance > ROBOT_SPEED:
+                    move_x = (dx / distance) * ROBOT_SPEED
+                    move_y = (dy / distance) * ROBOT_SPEED
+                    
+                    # Update robot position manually
+                    self.robot.x += move_x
+                    self.robot.y += move_y
+                    
+                    # Update the rect for drawing
+                    if hasattr(self.robot, 'rect'):
+                        self.robot.rect.x = int(self.robot.x)
+                        self.robot.rect.y = int(self.robot.y)
+                else:
+                    # Snap to exact spot if very close
+                    self.robot.move_to(parking_x, parking_y)
+            
             self.robot.draw_robot(self.screen)
+            # # Draw lines
+            # for i in range(1, self.text_index):
+            #     x1, y1, pen1 = self.text_path[i-1]
+            #     x2, y2, pen2 = self.text_path[i]
+            #     if pen2:
+            #         pygame.draw.line(self.screen, BLACK, (x1, y1), (x2, y2), DRAWING_WIDTH)
+
+            # # Move robot to next point
+            # if self.text_index < len(self.text_path):
+            #     target_x, target_y, pen = self.text_path[self.text_index]
+            #     self.robot.move_to(target_x, target_y)
+
+            #     # Draw line if pen is down
+            #     if pen and self.text_index > 0:
+            #         prev_x, prev_y, _ = self.text_path[self.text_index-1]
+            #         pygame.draw.line(self.screen, BLACK, (prev_x, prev_y), (self.robot.x, self.robot.y), DRAWING_WIDTH)
+
+            #     # Check if robot reached target
+            #     if (round(self.robot.x), round(self.robot.y)) == (round(target_x), round(target_y)):
+            #         self.text_index += 1
+
+            # # Draw robot
+            # self.robot.draw_robot(self.screen)
+            
+            
+    def reset_robot_to_start(self):
+            start_x = PAPER_RECT.left + 20
+            start_y = PAPER_RECT.top + 20
+            
+            if hasattr(self.robot, 'rect'):
+                self.robot.rect.x = start_x
+                self.robot.rect.y = start_y
+            else:
+                self.robot.x = start_x
+                self.robot.y = start_y
+
+
