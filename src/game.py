@@ -16,7 +16,7 @@ class Game:
         
         # Game states
         self.cur_state = "menu"
-        self.menu = Menu(self.screen)
+        self.menu = Menu(self.screen, MENU_BUTTONS)
         self.text_menu = TextMenu(self.screen)
         
         self.robot = Robot()
@@ -126,7 +126,7 @@ class Game:
             
             # Draw based on current state
             if self.cur_state == "menu":
-                self.menu.draw()
+                self.menu.draw("Autonomous Robotic Art", "Select Drawing Mode")
             elif self.cur_state == "text_menu":
                 self.text_menu.draw()
                 self.draw_back_button()
