@@ -6,6 +6,8 @@ from src.utils.img_utils import image_to_rgb_array
 from src.text.text_engine import TextEngine
 from src.cooperative.cooperative_robot import CooperativeRobot
 from src.environment.env import Border
+import random
+
 
 class Game:
     def __init__(self):
@@ -33,8 +35,10 @@ class Game:
 
         # Vector mode
         self.draw_entered = False
+        self.obstacles_entered = False
         self.vector_drawing = []
         self.current_stroke = []
+        self.obstacles = []
 
         # Text mode variables
         self.text_engine = TextEngine(spacing=10, scale=1.5)
@@ -65,6 +69,12 @@ class Game:
                     print("Dropped file:", img_path)
                     self.last_img_arr = image_to_rgb_array(img_path, IMAGE_RESOLUTION)
                     print("Array shape:", self.last_img_arr.shape)
+                elif event.type == pygame.KEYDOWN and self.cur_state == "vector" and self.draw_entered and not self.obstacles_entered:
+                    if event.key == pygame.K_o:  # user pressed 'o'
+                        # create a random rectangle
+                        w, h = random.randint(30, 100), random.randint(30, 100)
+                        x, y = random.randint(100, WIDTH - w - 100), random.randint(100, HEIGHT - h - 100)
+                        self.obstacles.append(pygame.Rect(x, y, w, h))
                 
                 # Handle menu events
                 if self.cur_state == "menu":
@@ -74,6 +84,7 @@ class Game:
                         self.cur_state = action
                         self.last_img_arr = None
                         self.draw_entered = False
+                        self.obstacles_entered = False
                         self.vector_drawing = []
                         self.current_stroke = []
                         if hasattr(self, 'vector_initialized'):
@@ -83,6 +94,7 @@ class Game:
                         self.text_entered = False
                         self.text_path = []
                         self.text_index = 0
+                        self.obstacles = []
                         print(f"Selected mode: {action}")
                 
                 # Handle text menu events
@@ -150,7 +162,7 @@ class Game:
                 self.cooperative_robot.draw(self.draw_back_button)
             
             pygame.display.flip()
-            self.clock.tick(60)
+            self.clock.tick(120)
             
     def wrap_text(self, text, font, max_width):
         """Splits a string into a list of lines that fit within max_width."""
@@ -241,6 +253,18 @@ class Game:
                 if not hasattr(self, 'vector_initialized'):
                     self.robot.init_vector_drawing(self.vector_drawing)
                     self.vector_initialized = True
+        elif not self.obstacles_entered:
+            prompt_surface = font.render("Press o to add a random obstacle, then press SPACE to see robot redraw", True, BLACK)
+            self.screen.blit(prompt_surface, (WIDTH // 2 - 400, 10))
+            
+            #draw obstacles
+            for obs in self.obstacles: 
+                pygame.draw.rect(self.screen, (0, 0, 0), obs)
+
+            # check for enters
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_SPACE]:
+                self.obstacles_entered = True
         else:
             self.robot.draw_vector(self.screen)
 
