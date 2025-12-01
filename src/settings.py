@@ -38,5 +38,10 @@ LINE_SPACING = 90  # How far down to jump for a new line
 MENU_BUTTONS = [
             {"text": "Raster Draw", "action": "raster"},
             {"text": "Vector Draw", "action": "vector"},
-            {"text": "Enter Text", "action": "text_menu"}
+            {"text": "Write Text", "action": "text_menu"}
+        ]
+
+TEXT_BUTTONS = [
+            {"text": "Single Robot", "action": "text_single"},
+            {"text": "Cooperative Robots", "action": "text_cooperative"}
         ]
