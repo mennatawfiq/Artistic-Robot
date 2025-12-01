@@ -31,6 +31,11 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
 
+        # Vector mode
+        self.draw_entered = False
+        self.vector_drawing = []
+        self.current_stroke = []
+
         # Text mode variables
         self.text_engine = TextEngine(spacing=10, scale=1.5)
         self.text_path = []
@@ -67,8 +72,13 @@ class Game:
                     if action:
                         print(f"*** ACTION FROM MENU: '{action}' ***")
                         self.cur_state = action
-                        self.is_robot_initialized = False # Reset robot when changing modes
-                        # Reset text variables
+                        self.last_img_arr = None
+                        self.draw_entered = False
+                        self.vector_drawing = []
+                        self.current_stroke = []
+                        if hasattr(self, 'vector_initialized'):
+                            delattr(self, 'vector_initialized')
+                        self.is_robot_initialized = False 
                         self.user_text = ""
                         self.text_entered = False
                         self.text_path = []
@@ -191,9 +201,48 @@ class Game:
 
     def run_vector_mode(self):
         self.screen.fill(WHITE)
+        self.border.draw(self.screen)
         self.draw_back_button()
-        self.robot.draw_robot(self.screen)
-        self.robot.draw_vector(self.screen)
+        font = pygame.font.SysFont('Serif', 28)
+        
+        if not self.draw_entered:
+            prompt_surface = font.render("Draw inside the frame, then press ENTER to see robot redraw it", True, BLACK)
+            self.screen.blit(prompt_surface, (WIDTH // 2 - 400, 10))
+            
+            mouse_pressed = pygame.mouse.get_pressed()[0]
+            if mouse_pressed:
+                mouse_pos = pygame.mouse.get_pos()
+                # check if mouse is inside the drawing frame
+                if PAPER_RECT.collidepoint(mouse_pos):
+                    if not hasattr(self, 'vector_drawing'):
+                        self.vector_drawing = []
+                        self.current_stroke = []
+                    
+                    self.current_stroke.append(mouse_pos)
+            else:
+                if hasattr(self, 'current_stroke') and len(self.current_stroke) > 0:
+                    self.vector_drawing.append(self.current_stroke[:])
+                    self.current_stroke = []
+            
+            # draw
+            if hasattr(self, 'vector_drawing'):
+                for stroke in self.vector_drawing:
+                    if len(stroke) > 1:
+                        pygame.draw.lines(self.screen, BLACK, False, stroke, 3)
+                # draw stroke as user enters it
+                if hasattr(self, 'current_stroke') and len(self.current_stroke) > 1:
+                    pygame.draw.lines(self.screen, BLACK, False, self.current_stroke, 3)
+            
+            # check for ENTER key 
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RETURN] and hasattr(self, 'vector_drawing') and len(self.vector_drawing) > 0:
+                self.draw_entered = True
+                # init robot for vector drawing
+                if not hasattr(self, 'vector_initialized'):
+                    self.robot.init_vector_drawing(self.vector_drawing)
+                    self.vector_initialized = True
+        else:
+            self.robot.draw_vector(self.screen)
 
     def run_single_robot_mode(self):
         """Single robot mode"""
@@ -202,11 +251,11 @@ class Game:
         self.border.draw(self.screen)
         self.draw_back_button()
         
-        font = pygame.font.SysFont('Arial', 24)
+        font = pygame.font.SysFont('Serif', 24)
         mode_surface = font.render("Mode: Single Robot", True, BLACK)
         self.screen.blit(mode_surface, (WIDTH - 200, 20))
         
-        font = pygame.font.SysFont('Arial', 32) 
+        font = pygame.font.SysFont('Serif', 32) 
         if not self.text_entered:
             prompt_surface = font.render("Enter text and press Enter:", True, BLACK)
             self.screen.blit(prompt_surface, (50, 20))
