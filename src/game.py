@@ -1,7 +1,7 @@
 import pygame
 from src.settings import *
 from src.robot.robot import Robot
-from src.menu import Menu, TextMenu
+from src.menu import Menu
 from src.utils.img_utils import image_to_rgb_array
 from src.text.text_engine import TextEngine
 from src.cooperative.cooperative_robot import CooperativeRobot
@@ -17,7 +17,7 @@ class Game:
         # Game states
         self.cur_state = "menu"
         self.menu = Menu(self.screen, MENU_BUTTONS)
-        self.text_menu = TextMenu(self.screen)
+        self.text_menu = Menu(self.screen, TEXT_BUTTONS)
         
         self.robot = Robot()
         
@@ -138,7 +138,7 @@ class Game:
             if self.cur_state == "menu":
                 self.menu.draw("Autonomous Robotic Art", "Select Drawing Mode")
             elif self.cur_state == "text_menu":
-                self.text_menu.draw()
+                self.text_menu.draw("Text Drawing Mode", "Select Robot Type")
                 self.draw_back_button()
             elif self.cur_state == "raster":
                 self.run_raster_mode()
