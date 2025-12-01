@@ -114,42 +114,63 @@ class TextEngine:
         return final_points
     
 
-    def build_path_coop(self, text, base_x, base_y):
+    def build_path_coop_multiline(self, text, start_x, start_y, paper_rect, line_spacing):
+        """Build path for cooperative robots with multi-line support"""
         final_points = []
-        offset = 0
+        
+        margin_x = 20
+        max_x = paper_rect.right - margin_x
+        max_y = paper_rect.bottom - 20
+        
+        current_x = start_x
+        current_y = start_y
+        base_x = paper_rect.left + margin_x  # For line wrapping
         
         for char in text.upper():
-            if char == " " or char not in LETTER_PATHS:
-                offset += self.spacing  # leave gap for space
+            if char == ' ':
+                current_x += self.spacing * 2
+                # Check if space causes line wrap
+                if current_x > max_x:
+                    current_x = base_x
+                    current_y += line_spacing
                 continue
-            if char == " " or char not in LETTER_PATHS:
-                offset += self.spacing
+            
+            if char not in LETTER_PATHS:
+                current_x += self.spacing
                 continue
-
+            
             letter_points = LETTER_PATHS[char]
-
-            # Compute letter width
-            max_x = max(px for px, py, pen in letter_points) * self.scale
-
+            char_width = max(px for px, py, pen in letter_points) * self.scale
+            
+            # Check if character causes line wrap
+            if current_x + char_width > max_x:
+                current_x = base_x
+                current_y += line_spacing
+            
+            # Check vertical limit
+            if current_y > max_y:
+                print("End of page reached for cooperative robot.")
+                break
+            
             # Pen-up move to start of letter
             x_start, y_start, _ = letter_points[0]
-            x_start = x_start * self.scale + base_x + offset
-            y_start = y_start * self.scale + base_y
+            x_start = x_start * self.scale + current_x
+            y_start = y_start * self.scale + current_y
             final_points.append((x_start, y_start, 0))  # pen up
-
+            
             # Letter strokes
             for i in range(1, len(letter_points)):
                 x1, y1, pen1 = letter_points[i-1]
                 x2, y2, pen2 = letter_points[i]
-
-                x1 = x1 * self.scale + base_x + offset
-                y1 = y1 * self.scale + base_y
-                x2 = x2 * self.scale + base_x + offset
-                y2 = y2 * self.scale + base_y
-
+                
+                x1 = x1 * self.scale + current_x
+                y1 = y1 * self.scale + current_y
+                x2 = x2 * self.scale + current_x
+                y2 = y2 * self.scale + current_y
+                
                 final_points.extend(self.interpolate(x1, y1, x2, y2, pen2, step=2))
-
-            # Update offset based on letter width + extra spacing
-            offset += max_x + self.spacing
-
+            
+            # Advance position
+            current_x += char_width + self.spacing
+        
         return final_points
