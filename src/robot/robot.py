@@ -100,9 +100,104 @@ class Robot:
     
     self.draw_robot(screen)
 
-
   def draw_vector(self, screen):
-    pass
+    if not hasattr(self, 'vector_path'):
+      return
+    
+    # Draw all completed segments
+    for i in range(len(self.completed_segments)):
+      stroke = self.completed_segments[i]
+      if len(stroke) > 1:
+        pygame.draw.lines(screen, BLACK, False, stroke, 3)
+    
+    # Draw current segment being drawn
+    if self.current_segment_index < len(self.vector_path):
+      current_stroke = self.vector_path[self.current_segment_index]
+      
+      # Draw completed part of current stroke
+      if self.current_point_index > 0:
+        points_to_draw = current_stroke[:self.current_point_index + 1]
+        if len(points_to_draw) > 1:
+          pygame.draw.lines(screen, BLACK, False, points_to_draw, 3)
+      
+      # Move robot to next point
+      if self.current_point_index < len(current_stroke):
+        target_x, target_y = current_stroke[self.current_point_index]
+        
+        # Move robot towards target
+        self.move_to(target_x, target_y)
+        
+        # Draw line from previous point to current robot position if we're drawing
+        if self.current_point_index > 0:
+          prev_x, prev_y = current_stroke[self.current_point_index - 1]
+          pygame.draw.line(screen, BLACK, (prev_x, prev_y), (self.x, self.y), 3)
+        
+        # Check if robot reached the target
+        if abs(self.x - target_x) < 1 and abs(self.y - target_y) < 1:
+          self.current_point_index += 1
+          
+          # If finished current stroke
+          if self.current_point_index >= len(current_stroke):
+            self.completed_segments.append(current_stroke[:])
+            self.current_segment_index += 1
+            self.current_point_index = 0
+            
+            # Move to start of next stroke if there is one
+            if self.current_segment_index < len(self.vector_path):
+              next_stroke = self.vector_path[self.current_segment_index]
+              if len(next_stroke) > 0:
+                self.x, self.y = next_stroke[0]
+    
+    self.draw_robot(screen)
+  
+  def init_vector_drawing(self, strokes):
+    # use greedy nearest neighbor algorithm to minimize pen-up travel distance
+
+    if not strokes or len(strokes) == 0:
+      return
+    
+    optimized_strokes = []
+    remaining_strokes = [stroke[:] for stroke in strokes] 
+    
+    current_stroke = remaining_strokes.pop(0)
+    optimized_strokes.append(current_stroke)
+    current_end = current_stroke[-1]
+    
+    while remaining_strokes:
+      min_dist = float('inf')
+      min_idx = 0
+      reverse = False
+      
+      for i, stroke in enumerate(remaining_strokes):
+        # check distance to start of stroke
+        dist_to_start = ((stroke[0][0] - current_end[0])**2 + (stroke[0][1] - current_end[1])**2)**0.5
+        if dist_to_start < min_dist:
+          min_dist = dist_to_start
+          min_idx = i
+          reverse = False
+        
+        # check distance to end of stroke to see if it's better to draw it backward
+        dist_to_end = ((stroke[-1][0] - current_end[0])**2 + (stroke[-1][1] - current_end[1])**2)**0.5
+        if dist_to_end < min_dist:
+          min_dist = dist_to_end
+          min_idx = i
+          reverse = True
+      
+      next_stroke = remaining_strokes.pop(min_idx)
+      if reverse:
+        next_stroke = next_stroke[::-1]  # reverse the stroke
+      
+      optimized_strokes.append(next_stroke)
+      current_end = next_stroke[-1]
+    
+    self.vector_path = optimized_strokes
+    self.current_segment_index = 0
+    self.current_point_index = 0
+    self.completed_segments = []
+    
+    # set robot to start of first stroke
+    if len(self.vector_path) > 0 and len(self.vector_path[0]) > 0:
+      self.x, self.y = self.vector_path[0][0]
 
   def draw_text(self, screen):
     pass
