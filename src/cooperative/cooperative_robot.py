@@ -22,11 +22,6 @@ class CooperativeRobot:
         self.user_text = ""
         self.text_entered = False
         
-        # Colors
-        self.RED_COLOR = (255, 0, 0)
-        self.BLUE_COLOR = (0, 0, 255)
-        self.BLACK_COLOR = (0, 0, 0)
-        
     def reset(self):
         """Reset all cooperative mode variables"""
         self.user_text = ""
@@ -83,7 +78,7 @@ class CooperativeRobot:
         
         # Display current mode
         font = pygame.font.SysFont('Arial', 24)
-        mode_surface = font.render("Mode: Cooperative Robots (Split Work)", True, self.BLACK_COLOR)
+        mode_surface = font.render("Mode: Cooperative Robots", True, BLACK)
         self.screen.blit(mode_surface, (WIDTH - 300, 20))
         
         font = pygame.font.SysFont('Arial', 32) 
@@ -106,9 +101,9 @@ class CooperativeRobot:
     
     def _draw_typing_prompt(self, font):
         """Draw typing prompt"""
-        prompt_surface = font.render("Enter text and press Enter:", True, self.BLACK_COLOR)
+        prompt_surface = font.render("Enter text and press Enter:", True, BLACK)
         self.screen.blit(prompt_surface, (50, 20))
-        input_surface = font.render(self.user_text, True, self.BLACK_COLOR)
+        input_surface = font.render(self.user_text, True, BLACK)
         self.screen.blit(input_surface, (50, 60))
     
     def _draw_completed_lines(self):
@@ -119,7 +114,7 @@ class CooperativeRobot:
                 x1, y1, pen1 = self.robot1_path[i-1]
                 x2, y2, pen2 = self.robot1_path[i]
                 if pen2:
-                    pygame.draw.line(self.screen, self.RED_COLOR, (x1, y1), (x2, y2), DRAWING_WIDTH)
+                    pygame.draw.line(self.screen, RED, (x1, y1), (x2, y2), DRAWING_WIDTH)
         
         # Draw completed lines for robot 2 
         for i in range(1, self.robot2_index):
@@ -127,45 +122,41 @@ class CooperativeRobot:
                 x1, y1, pen1 = self.robot2_path[i-1]
                 x2, y2, pen2 = self.robot2_path[i]
                 if pen2:
-                    pygame.draw.line(self.screen, self.BLUE_COLOR, (x1, y1), (x2, y2), DRAWING_WIDTH)
+                    pygame.draw.line(self.screen, BLUE, (x1, y1), (x2, y2), DRAWING_WIDTH)
     
     def _draw_current_lines(self):
         """Draw current lines being drawn"""
         # Draw current line for robot 1
         if self.robot1_index > 0 and self.robot1_index < len(self.robot1_path):
             prev_x, prev_y, _ = self.robot1_path[self.robot1_index-1]
-            pygame.draw.line(self.screen, self.RED_COLOR, (prev_x, prev_y), 
-                           (self.robot1.x, self.robot1.y), DRAWING_WIDTH)
+            pygame.draw.line(self.screen, RED, (prev_x, prev_y), 
+                          (self.robot1.x, self.robot1.y), DRAWING_WIDTH)
         
         # Draw current line for robot 2
         if self.robot2_index > 0 and self.robot2_index < len(self.robot2_path):
             prev_x, prev_y, _ = self.robot2_path[self.robot2_index-1]
-            pygame.draw.line(self.screen, self.BLUE_COLOR, (prev_x, prev_y), 
-                           (self.robot2.x, self.robot2.y), DRAWING_WIDTH)
+            pygame.draw.line(self.screen, BLUE, (prev_x, prev_y), 
+                          (self.robot2.x, self.robot2.y), DRAWING_WIDTH)
     
     def _draw_robots(self):
         """Draw both robots"""
         # Robot 1 (Red)
-        pygame.draw.circle(self.screen, self.RED_COLOR, (int(self.robot1.x), int(self.robot1.y)), 10)
-        pygame.draw.circle(self.screen, self.BLACK_COLOR, (int(self.robot1.x), int(self.robot1.y)), 10, 2)
+        pygame.draw.circle(self.screen, RED, (int(self.robot1.x), int(self.robot1.y)), 10)
+        pygame.draw.circle(self.screen, BLACK, (int(self.robot1.x), int(self.robot1.y)), 10, 2)
         
         # Robot 2 (Blue)
-        pygame.draw.circle(self.screen, self.BLUE_COLOR, (int(self.robot2.x), int(self.robot2.y)), 10)
-        pygame.draw.circle(self.screen, self.BLACK_COLOR, (int(self.robot2.x), int(self.robot2.y)), 10, 2)
+        pygame.draw.circle(self.screen, BLUE, (int(self.robot2.x), int(self.robot2.y)), 10)
+        pygame.draw.circle(self.screen, BLACK, (int(self.robot2.x), int(self.robot2.y)), 10, 2)
     
     def _draw_cooperation_info(self, font):
         """Display cooperation information"""
         status_font = pygame.font.SysFont('Arial', 18)
         
         # Show final result
-        result_x, result_y = 50, 150
-        title_surface = font.render("Final Result:", True, self.BLACK_COLOR)
+        result_x, result_y = 50, 50
+        title_surface = font.render("Final Result:", True, BLACK)
         self.screen.blit(title_surface, (result_x, result_y - 40))
         
-        text_surface = font.render(self.user_text, True, self.BLACK_COLOR)
-        self.screen.blit(text_surface, (result_x, result_y))
-        
-       
         text_length = len(self.user_text)
         mid_point = text_length // 2
         
@@ -182,8 +173,8 @@ class CooperativeRobot:
         robot1_info = f"Robot 1 (Red - First Half): '{robot1_chars}' ({len(robot1_chars)} chars)"
         robot2_info = f"Robot 2 (Blue - Second Half): '{robot2_chars}' ({len(robot2_chars)} chars)"
         
-        robot1_surface = status_font.render(robot1_info, True, self.RED_COLOR)
-        robot2_surface = status_font.render(robot2_info, True, self.BLUE_COLOR)
+        robot1_surface = status_font.render(robot1_info, True, RED)
+        robot2_surface = status_font.render(robot2_info, True, BLUE)
         
         self.screen.blit(robot1_surface, (50, HEIGHT - 80))
         self.screen.blit(robot2_surface, (50, HEIGHT - 50))
@@ -192,40 +183,49 @@ class CooperativeRobot:
         total_points = len(self.robot1_path) + len(self.robot2_path)
         completed_points = self.robot1_index + self.robot2_index
         progress = f"Progress: {completed_points}/{total_points} points"
-        progress_surface = status_font.render(progress, True, self.BLACK_COLOR)
+        progress_surface = status_font.render(progress, True, BLACK)
         self.screen.blit(progress_surface, (50, HEIGHT - 110))
         
         # Show completion percentage
         if total_points > 0:
             percentage = (completed_points / total_points) * 100
-            percent_surface = status_font.render(f"Completion: {percentage:.1f}%", True, self.BLACK_COLOR)
+            percent_surface = status_font.render(f"Completion: {percentage:.1f}%", True, BLACK)
             self.screen.blit(percent_surface, (50, HEIGHT - 140))
     
     def _create_cooperative_paths(self):
-       
         if not self.user_text:
             return
         
+        # Calculate where to split the text (middle character)
         text_length = len(self.user_text)
         mid_point = text_length // 2
-        
         
         robot1_text = self.user_text[:mid_point]
         robot2_text = self.user_text[mid_point:]
         
-     
+        # Calculate the actual position where robot2 should start
+        # We need to figure out where robot1's text ends (considering line wraps)
+        robot2_start_x, robot2_start_y = self._calculate_robot2_start_position(robot1_text)
         
+        # Build paths with proper positioning
+        robot1_start_x = PAPER_RECT.left + 20
+        robot1_start_y = PAPER_RECT.top + 20
         
-        available_width = WIDTH - 100  
-        section_width = available_width // 2
+        self.robot1_path = self.text_engine.build_path_coop_multiline(
+            robot1_text, 
+            robot1_start_x, 
+            robot1_start_y,
+            PAPER_RECT,
+            LINE_SPACING
+        )
         
-       
-        robot1_start_x = 50  
-        robot2_start_x = 50 + section_width  
-        
-        
-        self.robot1_path = self.text_engine.build_path_coop(robot1_text, robot1_start_x, 300)
-        self.robot2_path = self.text_engine.build_path_coop(robot2_text, robot2_start_x, 300)
+        self.robot2_path = self.text_engine.build_path_coop_multiline(
+            robot2_text, 
+            robot2_start_x, 
+            robot2_start_y,
+            PAPER_RECT,
+            LINE_SPACING
+        )
         
         # Reset indices
         self.robot1_index = 0
@@ -236,8 +236,48 @@ class CooperativeRobot:
             self.robot1.x, self.robot1.y, _ = self.robot1_path[0]
         if self.robot2_path:
             self.robot2.x, self.robot2.y, _ = self.robot2_path[0]
+    
+    def _calculate_robot2_start_position(self, robot1_text):
+        """Calculate where robot2 should start based on where robot1's text ends"""
+        margin_x = 20
+        margin_y = 20
         
+        start_x = PAPER_RECT.left + margin_x
+        start_y = PAPER_RECT.top + margin_y
+        max_x = PAPER_RECT.right - margin_x
         
+        current_x = start_x
+        current_y = start_y
+        
+        # Simulate drawing robot1's text to find end position
+        for char in robot1_text.upper():
+            if char == ' ':
+                current_x += self.text_engine.spacing * 2
+                # Check if space causes line wrap
+                if current_x > max_x:
+                    current_x = start_x
+                    current_y += LINE_SPACING
+                continue
+            
+            char_width = self.text_engine.get_char_width(char)
+            
+            # Check if character causes line wrap
+            if current_x + char_width > max_x:
+                current_x = start_x
+                current_y += LINE_SPACING
+            
+            # Draw the character (advance position)
+            current_x += char_width + self.text_engine.spacing
+        
+        # Add a small space between robot1's last char and robot2's first char
+        current_x += self.text_engine.spacing
+        
+        # Check if robot2 needs to start on a new line
+        if current_x > max_x:
+            current_x = start_x
+            current_y += LINE_SPACING
+        
+        return current_x, current_y
     
     def is_complete(self):
         """Check if drawing is complete"""
