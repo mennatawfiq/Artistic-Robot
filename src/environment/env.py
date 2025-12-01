@@ -1,13 +1,28 @@
 from src.settings import *
+from src.environment.obstacles import ObstacleManager
 import pygame
 
 class Env:
+  def __init__(self, border):
+    self.border = border
 
-  def __init(self):
-    pass
+    # Create obstacle manager sized to the paper area
+    w = border.rect.width
+    h = border.rect.height
 
-  def draw(self):
-    pass
+    self.obstacles = ObstacleManager(width=w, height=h)
+
+    # Spawn obstacles
+    self.obstacles.generate_static(4)
+    #self.obstacles.generate_moving(3)
+
+  def update(self, dt):
+    self.obstacles.update(dt)
+
+  def draw(self, screen):
+    # Draw inside border
+    sub_surface = screen.subsurface(self.border.rect)
+    self.obstacles.draw(sub_surface)
 
 
 class Border:
